@@ -43,11 +43,16 @@ goto link
 if errorlevel 1 exit /b 1
 
 :link
-link /nologo "%DIR%%BASE%.obj" "%CATCH_OBJ%" /OUT:"%DIR%%BASE%.exe"
+%COMP% %CFLAGS% "%DIR%%BASE%.obj" "%CATCH_OBJ%" /Fe:"%DIR%%BASE%.exe"
 
 if /I "%MODE%"=="cov" (
   set LLVM_PROFILE_FILE=%ROOT%default.profraw
   "%DIR%%BASE%.exe"
   llvm-profdata merge -sparse "%ROOT%default.profraw" -o "%ROOT%default.profdata"
   llvm-cov report "%DIR%%BASE%.exe" "-instr-profile=%ROOT%default.profdata" -ignore-filename-regex="third_party|catch_amalgamated" > "%DIR%coverage_report.txt"
+)
+
+if /I "%MODE%"=="ubsan" (
+  set "COMP=clang-cl"
+  set "CFLAGS=/nologo /std:c++20 /W4 /EHsc /Od /Zi /clang:-fsanitize=undefined /clang:-fno-sanitize-recover=undefined"
 )
