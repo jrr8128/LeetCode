@@ -31,11 +31,48 @@ Build with coverage artifacts (written to the same folder):
 
 #### Prerequisites
 
+`sudo apt update`
+`sudo apt install -y cmake ninja-build llvm llvm-cov llvm-profdata clang-20 lld-20`
+`sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-20 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-20`
+
 * CMake
 * C++23 (clang++)
 * Ninja or Make
 
 #### Commands 
+
+##### Verify:
+```
+clang++ --version
+cmake --version
+ninja --version
+llvm-cov --version
+llvm-profdata --version
+```
+
+##### Coverage + build (Ninja)
+```
+cmake -S . -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_C_COMPILER=clang \
+  -DCMAKE_CXX_COMPILER=clang++
+cmake --build build
+```
+
+##### Coverage
+```
+cmake -S . -B build-cov -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_C_COMPILER=clang \
+  -DCMAKE_CXX_COMPILER=clang++ \
+  -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+  -DCMAKE_EXE_LINKER_FLAGS="-fprofile-instr-generate"
+cmake --build build-cov
+LLVM_PROFILE_FILE=default.profraw ./build-cov/<your_exe>
+llvm-profdata merge -sparse default.profraw -o default.profdata
+llvm-cov report ./build-cov/<your_exe> -instr-profile=default.profdata
+```
+
 
 ```
 TODO: 
